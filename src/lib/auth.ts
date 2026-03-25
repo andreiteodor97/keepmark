@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import { nanoid, customAlphabet } from "nanoid";
 import { cookies } from "next/headers";
-import { Resend } from "resend";
+// AgentMail API for sending emails
 import { prisma } from "./db";
 import type { User } from "@prisma/client";
 
@@ -186,37 +186,52 @@ export async function sendMagicLink(email: string): Promise<void> {
     },
   });
 
-  // Send email via Resend
+  // Send email via AgentMail
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const verifyUrl = `${appUrl}/api/auth/verify?token=${token}`;
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const inboxId = process.env.AGENTMAIL_INBOX_ID;
+  const apiKey = process.env.AGENTMAIL_API_KEY;
 
   console.log(`[auth] Sending magic link to ${normalizedEmail}, verify URL: ${verifyUrl}`);
 
-  const result = await resend.emails.send({
-    from: "Keepmark <onboarding@resend.dev>",
-    to: normalizedEmail,
-    subject: "Sign in to Keepmark",
-    html: `
-      <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #111; margin-bottom: 16px;">Sign in to Keepmark</h2>
-        <p style="color: #555; line-height: 1.5;">
-          Click the button below to sign in. This link expires in 15 minutes.
-        </p>
-        <a href="${verifyUrl}"
-           style="display: inline-block; background: #111; color: #fff; padding: 12px 24px;
-                  border-radius: 6px; text-decoration: none; margin-top: 16px; font-weight: 500;">
-          Sign in to Keepmark
-        </a>
-        <p style="color: #999; font-size: 13px; margin-top: 24px;">
-          If you didn't request this email, you can safely ignore it.
-        </p>
-      </div>
-    `,
-  });
+  const res = await fetch(
+    `https://api.agentmail.to/v0/inboxes/${inboxId}/messages/send`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to: normalizedEmail,
+        subject: "Sign in to Keepmark",
+        html: `
+          <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #111; margin-bottom: 16px;">Sign in to Keepmark</h2>
+            <p style="color: #555; line-height: 1.5;">
+              Click the button below to sign in. This link expires in 15 minutes.
+            </p>
+            <a href="${verifyUrl}"
+               style="display: inline-block; background: #111; color: #fff; padding: 12px 24px;
+                      border-radius: 6px; text-decoration: none; margin-top: 16px; font-weight: 500;">
+              Sign in to Keepmark
+            </a>
+            <p style="color: #999; font-size: 13px; margin-top: 24px;">
+              If you didn't request this email, you can safely ignore it.
+            </p>
+          </div>
+        `,
+      }),
+    },
+  );
 
-  console.log(`[auth] Resend response:`, JSON.stringify(result));
+  const result = await res.json();
+  console.log(`[auth] AgentMail response:`, res.status, JSON.stringify(result));
+
+  if (!res.ok) {
+    throw new Error(`AgentMail error: ${res.status} ${JSON.stringify(result)}`);
+  }
 }
 
 /**
