@@ -193,7 +193,7 @@ export async function sendMagicLink(email: string): Promise<void> {
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   await resend.emails.send({
-    from: "Keepmark <noreply@keepmark.app>",
+    from: "Keepmark <onboarding@resend.dev>",
     to: normalizedEmail,
     subject: "Sign in to Keepmark",
     html: `
