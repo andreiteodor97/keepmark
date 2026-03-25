@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  name              String?
+  plan              String   @default("free")
+  apiKeyHash        String?  @unique @map("api_key_hash")
+  linkLimit         Int      @default(50) @map("link_limit")
+  linkCountLifetime Int      @default(0) @map("link_count_lifetime")
+  linkCountMonth    Int      @default(0) @map("link_count_month")
+  linkCountMonthKey String?  @map("link_count_month_key")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  items       Item[]
+  collections Collection[]
+  sources     Source[]
+  sessions    Session[]
+  magicLinks  MagicLink[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model MagicLink {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("magic_links")
+}
+
+model Item {
+  id                  String    @id @default(cuid())
+  userId              String    @map("user_id")
+  url                 String
+  urlHash             String    @map("url_hash")
+  title               String?
+  favicon             String?
+  status              String    @default("stashed")
+  timesAdded          Int       @default(1) @map("times_added")
+  notes               String?
+  tags                Json      @default("[]")
+  tagSlugs            Json      @default("[]") @map("tag_slugs")
+  contentExtractedAt  DateTime? @map("content_extracted_at")
+  contentSize         Int?      @map("content_size")
+  contentExtractError String?   @map("content_extract_error")
+  contentTruncated    Boolean   @default(false) @map("content_truncated")
+  contentSource       String?   @map("content_source")
+  contentAvailable    Boolean   @default(false) @map("content_available")
+  contentMarkdown     String?   @map("content_markdown")
+  contentJson         Json?     @map("content_json")
+  processedAt         DateTime? @map("processed_at")
+  lastSeenAt          DateTime  @default(now()) @map("last_seen_at")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collections ItemCollection[]
+
+  @@unique([userId, urlHash])
+  @@index([userId, status])
+  @@index([userId, processedAt])
+  @@map("items")
+}
+
+model Collection {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  name      String
+  slug      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items ItemCollection[]
+
+  @@unique([userId, slug])
+  @@map("collections")
+}
+
+model ItemCollection {
+  itemId       String @map("item_id")
+  collectionId String @map("collection_id")
+
+  item       Item       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, collectionId])
+  @@map("item_collections")
+}
+
+model Source {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  type          String
+  name          String
+  status        String    @default("active")
+  pollEveryMin  Int       @default(180) @map("poll_every_min")
+  nextPollAt    DateTime? @map("next_poll_at")
+  lastRunAt     DateTime? @map("last_run_at")
+  lastSuccessAt DateTime? @map("last_success_at")
+  lastError     String?   @map("last_error")
+  inboxAddress  String?   @map("inbox_address")
+  config        Json      @default("{}")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sources")
+}

@@ -1,0 +1,50 @@
+{
+  "name": "keepmark",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.5.0",
+    "@prisma/client": "^6.5.0",
+    "clsx": "^2.1.1",
+    "jose": "^6.0.11",
+    "linkedom": "^0.18.9",
+    "lucide-react": "^0.475.0",
+    "nanoid": "^5.1.5",
+    "next": "15.2.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
+    "resend": "^4.5.1",
+    "tailwind-merge": "^3.0.2",
+    "turndown": "^7.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
+    "@types/turndown": "^5.0.5",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^9.23.0",
+    "eslint-config-next": "15.2.4",
+    "postcss": "^8.5.3",
+    "prisma": "^6.5.0",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

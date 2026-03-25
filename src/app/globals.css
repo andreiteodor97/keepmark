@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  ::selection {
+    @apply bg-foreground text-white;
+  }
+}
+
+@layer components {
+  .prose-reader {
+    @apply prose prose-neutral max-w-none;
+    @apply prose-headings:font-mono prose-headings:tracking-tight;
+    @apply prose-a:text-foreground prose-a:underline prose-a:decoration-muted/40 hover:prose-a:decoration-foreground;
+    @apply prose-code:rounded prose-code:bg-neutral-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm prose-code:font-mono;
+    @apply prose-pre:bg-neutral-950 prose-pre:text-neutral-200;
+    @apply prose-img:rounded-lg;
+    @apply prose-blockquote:border-l-neutral-300 prose-blockquote:text-muted;
+  }
+}
+
+@layer utilities {
+  .font-reader {
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+}
