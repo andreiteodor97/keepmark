@@ -9,7 +9,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "valid email is required" }, { status: 400 });
   }
 
-  await sendMagicLink(email.toLowerCase().trim());
+  try {
+    await sendMagicLink(email.toLowerCase().trim());
+  } catch (err) {
+    console.error("Magic link error:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to send magic link" },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }
