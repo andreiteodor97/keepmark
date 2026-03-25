@@ -26,6 +26,12 @@ model User {
   sessions    Session[]
   magicLinks  MagicLink[]
 
+  sites            Site[]
+  handle           Handle?
+  customDomains    CustomDomain[]
+  siteCount        Int      @default(0) @map("site_count")
+  storageUsedBytes BigInt   @default(0) @map("storage_used_bytes")
+
   @@map("users")
 }
 
@@ -133,4 +139,131 @@ model Source {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sources")
+}
+
+model Site {
+  id               String        @id @default(cuid())
+  userId           String?       @map("user_id")
+  slug             String        @unique
+  status           String        @default("pending") // pending | live | deleted
+  currentVersionId String?       @map("current_version_id")
+  claimToken       String?       @unique @map("claim_token")
+  password         String?
+  metadata         Json          @default("{}")
+  ttl              DateTime?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  user     User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  versions SiteVersion[]
+
+  @@index([userId, status])
+  @@index([ttl])
+  @@map("sites")
+}
+
+model SiteVersion {
+  id               String    @id @default(cuid())
+  siteId           String    @map("site_id")
+  versionNumber    Int       @map("version_number")
+  status           String    @default("pending")
+  isLive           Boolean   @default(false) @map("is_live")
+  requiresFinalize Boolean   @default(true) @map("requires_finalize")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  finalizedAt      DateTime? @map("finalized_at")
+
+  site    Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  files   SiteFile[]
+  uploads Upload[]
+
+  @@unique([siteId, versionNumber])
+  @@map("site_versions")
+}
+
+model SiteFile {
+  id          String   @id @default(cuid())
+  versionId   String   @map("version_id")
+  path        String
+  hash        String
+  size        Int
+  contentType String   @map("content_type")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  version SiteVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  blob    FileBlob    @relation(fields: [hash], references: [hash])
+
+  @@unique([versionId, path])
+  @@map("site_files")
+}
+
+model FileBlob {
+  hash        String   @id
+  size        Int
+  contentType String   @map("content_type")
+  storageKey  String   @map("storage_key")
+  refCount    Int      @default(1) @map("ref_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  files SiteFile[]
+
+  @@map("file_blobs")
+}
+
+model Upload {
+  id        String   @id @default(cuid())
+  versionId String   @map("version_id")
+  fileHash  String   @map("file_hash")
+  path      String
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  version SiteVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@map("uploads")
+}
+
+model Handle {
+  id        String   @id @default(cuid())
+  userId    String   @unique @map("user_id")
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links Link[]
+
+  @@map("handles")
+}
+
+model CustomDomain {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  domain            String   @unique
+  verified          Boolean  @default(false)
+  verificationToken String   @map("verification_token")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links Link[]
+
+  @@map("custom_domains")
+}
+
+model Link {
+  id        String   @id @default(cuid())
+  handleId  String?  @map("handle_id")
+  domainId  String?  @map("domain_id")
+  location  String
+  siteSlug  String   @map("site_slug")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  handle Handle?       @relation(fields: [handleId], references: [id], onDelete: Cascade)
+  domain CustomDomain? @relation(fields: [domainId], references: [id], onDelete: Cascade)
+
+  @@unique([handleId, location])
+  @@unique([domainId, location])
+  @@map("links")
 }

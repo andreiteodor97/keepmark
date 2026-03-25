@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Settings, LogOut } from "lucide-react";
+import { Settings, LogOut, Globe } from "lucide-react";
 import { SearchBar } from "@/components/search-bar";
 import { useCallback } from "react";
 
@@ -59,6 +59,13 @@ export function DashboardShell({ userEmail, children }: DashboardShellProps) {
             <span className="text-xs text-neutral-500 font-mono hidden md:block">
               {userEmail}
             </span>
+            <Link
+              href="/dashboard/sites"
+              className="rounded-md p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+              title="Sites"
+            >
+              <Globe className="h-4 w-4" />
+            </Link>
             <Link
               href="/settings"
               className="rounded-md p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"

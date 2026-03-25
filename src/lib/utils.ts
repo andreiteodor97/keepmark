@@ -132,3 +132,15 @@ const alphanumericNanoid = customAlphabet(
 export function generateId(): string {
   return alphanumericNanoid();
 }
+
+const slugNanoid = customAlphabet(
+  "0123456789abcdefghijklmnopqrstuvwxyz",
+  8
+);
+
+/**
+ * Generate an 8-character alphanumeric slug for published sites.
+ */
+export function generateSlug(): string {
+  return slugNanoid();
+}
